@@ -11,7 +11,15 @@ import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPo
 // The flow for ERC-4337 typically involves an EntryPoint contract
 // calling into this account contract.
 contract MinimalAccount is IAccount, Ownable {
+    error MinimalAccount__NotFromEntryPoint();
     IEntryPoint private immutable i_entryPoint;
+
+    modifier requireFromEntryPoint() {
+        if (msg.sender != address(i_entryPoint)) {
+            revert MinimalAccount__NotFromEntryPoint();
+        }
+        _; // This placeholder executes the body of the function the modifier is applied to.
+    }
 
     constructor(address entryPoint) Ownable(msg.sender) {
         i_entryPoint = IEntryPoint(entryPoint);
@@ -51,10 +59,10 @@ contract MinimalAccount is IAccount, Ownable {
         }
     }
     // / ///////////////////////////////////////////////////////////////////////////
-// / ////////////////////////////// GETTERS ////////////////////////////////////
-// / ///////////////////////////////////////////////////////////////////////////
-​
-function getEntryPoint() external view returns (address) {
-    return address(i_entryPoint);
-}
+    // / ////////////////////////////// GETTERS ////////////////////////////////////
+    // / ///////////////////////////////////////////////////////////////////////////
+
+    function getEntryPoint() external view returns (address) {
+        return address(i_entryPoint);
+    }
 }
