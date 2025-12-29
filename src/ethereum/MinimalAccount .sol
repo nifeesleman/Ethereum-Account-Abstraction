@@ -11,7 +11,7 @@ import {SIG_VALIDATION_FAILED, SIG_VALIDATION_SUCCESS} from "lib/account-abstrac
 // calling into this account contract.
 contract MinimalAccount is IAccount, Ownable {
     address private immutable i_entryPoint;
-    constructor() Ownable(msg.sender) {}
+    constructor(address entryPoint) Ownable(msg.sender) {}
 
     function validateUserOp(PackedUserOperation calldata userOp, bytes32 userOpHash, uint256 missingAccountFunds)
         external
