@@ -10,6 +10,7 @@ import {SIG_VALIDATION_FAILED, SIG_VALIDATION_SUCCESS} from "lib/account-abstrac
 // The flow for ERC-4337 typically involves an EntryPoint contract
 // calling into this account contract.
 contract MinimalAccount is IAccount, Ownable {
+    address private immutable i_entryPoint;
     constructor() Ownable(msg.sender) {}
 
     function validateUserOp(PackedUserOperation calldata userOp, bytes32 userOpHash, uint256 missingAccountFunds)
