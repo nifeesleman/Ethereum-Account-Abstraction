@@ -1,19 +1,48 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
-
 import {IAccount} from "lib/account-abstraction/contracts/interfaces/IAccount.sol";
 import {PackedUserOperation} from "lib/account-abstraction/contracts/interfaces/PackedUserOperation.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import {SIG_VALIDATION_FAILED, SIG_VALIDATION_SUCCESS} from "lib/account-abstraction/contracts/core/Helpers.sol";
 
 // The flow for ERC-4337 typically involves an EntryPoint contract
 // calling into this account contract.
-contract MinimalAccount is IAccount {
+contract MinimalAccount is IAccount, Ownable {
+    constructor() Ownable(msg.sender) {}
+
     function validateUserOp(PackedUserOperation calldata userOp, bytes32 userOpHash, uint256 missingAccountFunds)
         external
-        view
-        override
         returns (uint256 validationData)
     {
-        // TODO: Implement actual validation logic (signature, nonce)
-        return 0; // Placeholder for successful validation
+        validationData = _validateSignature(userOp, userOpHash);
+        _payPrefund(missingAccountFunds);
+    }
+
+    function _validateSignature(PackedUserOperation calldata userOp, bytes32 userOpHash)
+        internal
+        view
+        returns (uint256 validationData)
+    {
+        // A signature is valid if it's from the MinimalAccount owner
+        bytes32 ethSignedMessageHash = MessageHashUtils.toEthSignedMessageHash(userOpHash);
+        address signer = ECDSA.recover(ethSignedMessageHash, userOp.signature);
+
+        if (signer == address(0) || signer != owner()) {
+            // Also check for invalid signature recovery
+            return SIG_VALIDATION_FAILED; // Returns 1
+        }
+
+        return SIG_VALIDATION_SUCCESS; // Returns 0
+    }
+
+    function _payPrefund(uint256 missingAccountFunds) internal {
+        if (missingAccountFunds != 0) {
+            (bool success,) = payable(msg.sender).call{value: missingAccountFunds, gas: type(uint256).max}("");
+            (success);
+            // In a real implementation, you would transfer the required funds to the EntryPoint here.
+            // For simplicity, this example does not implement actual fund transfers.
+        }
     }
 }
