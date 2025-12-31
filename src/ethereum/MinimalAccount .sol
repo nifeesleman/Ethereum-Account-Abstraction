@@ -20,17 +20,15 @@ contract MinimalAccount is IAccount, Ownable {
     IEntryPoint private immutable i_entryPoint;
 
     modifier requireFromEntryPoint() {
-        if (msg.sender != address(i_entryPoint)) {
-            revert MinimalAccount__NotFromEntryPoint();
-        }
-        _; // This placeholder executes the body of the function the modifier is applied to.
-    }
-    modifier requireFromEntryPointOrOwner() {
-        if (msg.sender != address(i_entryPoint) && msg.sender != owner()) {
-            revert MinimalAccount__NotFromEntryPointOrOwner();
-        }
+        _requireFromEntryPoint();
         _;
     }
+
+    modifier requireFromEntryPointOrOwner() {
+        _requireFromEntryPointOrOwner();
+        _;
+    }
+
     ////////////////////////////////////////////////////////////////
     //                        FUNCTIONS                           //
     ////////////////////////////////////////////////////////////////
