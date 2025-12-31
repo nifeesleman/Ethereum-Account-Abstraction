@@ -11,7 +11,12 @@ import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPo
 // The flow for ERC-4337 typically involves an EntryPoint contract
 // calling into this account contract.
 contract MinimalAccount is IAccount, Ownable {
+    ////////////////////////////////////////////////////////////////
+    //                         ERRORS                             //
+    ////////////////////////////////////////////////////////////////
     error MinimalAccount__NotFromEntryPoint();
+    error MinimalAccount__NotFromEntryPointOrOwner(); // New
+    error MinimalAccount__CallFailed(bytes result); // New
     IEntryPoint private immutable i_entryPoint;
 
     modifier requireFromEntryPoint() {
@@ -20,9 +25,35 @@ contract MinimalAccount is IAccount, Ownable {
         }
         _; // This placeholder executes the body of the function the modifier is applied to.
     }
+    modifier requireFromEntryPointOrOwner() {
+        if (msg.sender != address(i_entryPoint) && msg.sender != owner()) {
+            revert MinimalAccount__NotFromEntryPointOrOwner();
+        }
+        _;
+    }
+    ////////////////////////////////////////////////////////////////
+    //                        FUNCTIONS                           //
+    ////////////////////////////////////////////////////////////////
+    // constructor(address entryPoint) Ownable(msg.sender) { ... } // (already shown)
+
+    receive() external payable {}
 
     constructor(address entryPoint) Ownable(msg.sender) {
         i_entryPoint = IEntryPoint(entryPoint);
+    }
+
+    ////////////////////////////////////////////////////////////////
+    //                   EXTERNAL FUNCTIONS                       //
+    ////////////////////////////////////////////////////////////////
+    function execute(address dest, uint256 value, bytes calldata functionData)
+        external
+        requireFromEntryPointOrOwner // We'll discuss this modifier next
+
+    {
+        (bool success, bytes memory result) = dest.call{value: value}(functionData);
+        if (!success) {
+            revert MinimalAccount__CallFailed(result);
+        }
     }
 
     function validateUserOp(PackedUserOperation calldata userOp, bytes32 userOpHash, uint256 missingAccountFunds)
@@ -31,6 +62,22 @@ contract MinimalAccount is IAccount, Ownable {
     {
         validationData = _validateSignature(userOp, userOpHash);
         _payPrefund(missingAccountFunds);
+    }
+
+    ////////////////////////////////////////////////////////////////
+    //                   INTERNAL FUNCTIONS                       //
+    ////////////////////////////////////////////////////////////////
+
+    function _requireFromEntryPoint() internal view {
+        if (msg.sender != address(i_entryPoint)) {
+            revert MinimalAccount__NotFromEntryPoint();
+        }
+    }
+
+    function _requireFromEntryPointOrOwner() internal view {
+        if (msg.sender != address(i_entryPoint) && msg.sender != owner()) {
+            revert MinimalAccount__NotFromEntryPointOrOwner();
+        }
     }
 
     function _validateSignature(PackedUserOperation calldata userOp, bytes32 userOpHash)
@@ -44,10 +91,10 @@ contract MinimalAccount is IAccount, Ownable {
 
         if (signer == address(0) || signer != owner()) {
             // Also check for invalid signature recovery
-            return SIG_VALIDATION_FAILED; // Returns 1
+            return SIG_VALIDATION_FAILED;
         }
 
-        return SIG_VALIDATION_SUCCESS; // Returns 0
+        return SIG_VALIDATION_SUCCESS;
     }
 
     function _payPrefund(uint256 missingAccountFunds) internal {
