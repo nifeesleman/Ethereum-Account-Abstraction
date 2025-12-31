@@ -15,7 +15,6 @@ contract HelperConfig is Script {
     uint256 constant ZKSYNC_SEPOLIA_CHAIN_ID = 300;
     uint256 constant LOCAL_CHAIN_ID = 31337; // Anvil default
 
-
     // Official Sepolia EntryPoint address: 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789
     address constant FOUNDRY_DEFAULT_WALLET = 0x1804c8AB1F12E6bbf3894d4083f33e07309d1f38;
     address constant BURNER_WALLET = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266; // Replace with your actual address
@@ -30,19 +29,13 @@ contract HelperConfig is Script {
     }
 
     function getEthSepoliaConfig() public pure returns (NetworkConfig memory) {
-        return NetworkConfig({
-            entryPoint: 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789,
-            account: BURNER_WALLET
-        });
+        return NetworkConfig({entryPoint: 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789, account: BURNER_WALLET});
     }
 
     function getZkSyncSepoliaConfig() public pure returns (NetworkConfig memory) {
         // ZKSync Era has native account abstraction; an external EntryPoint might not be used in the same way.
         // address(0) is used as a placeholder or to indicate reliance on native mechanisms.
-        return NetworkConfig({
-            entryPoint: address(0),
-            account: BURNER_WALLET
-        });
+        return NetworkConfig({entryPoint: address(0), account: BURNER_WALLET});
     }
 
     function getOrCreateAnvilEthConfig() public returns (NetworkConfig memory) {
@@ -69,7 +62,8 @@ contract HelperConfig is Script {
         if (chainId == LOCAL_CHAIN_ID) {
             return getOrCreateAnvilEthConfig();
         }
-        if (networkConfigs[chainId].account != address(0)) { // Check if config exists
+        if (networkConfigs[chainId].account != address(0)) {
+            // Check if config exists
             return networkConfigs[chainId];
         }
         revert("HelperConfig__InvalidChainId()");
