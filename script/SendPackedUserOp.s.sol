@@ -2,9 +2,10 @@
 pragma solidity 0.8.24;
 
 import {PackedUserOperation} from "lib/account-abstraction/contracts/interfaces/PackedUserOperation.sol";
-import {HelperConfig, NetworkConfig} from "script/HelperConfig.s.sol"; // Assuming NetworkConfig is defined or imported here
+import {HelperConfig} from "script/HelperConfig.s.sol"; // Assuming NetworkConfig is defined or imported here
 import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPoint.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import {Script} from "forge-std/Script.sol";
 
 // In SendPackedUserOp.s.sol
 // Make sure MessageHashUtils is available for bytes32
