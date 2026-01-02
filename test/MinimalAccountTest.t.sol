@@ -10,6 +10,7 @@ import {SendPackedUserOp, PackedUserOperation} from "script/SendPackedUserOp.s.s
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPoint.sol";
+
 contract MinimalAccountTest is Test {
     using MessageHashUtils for bytes32;
 
@@ -70,32 +71,52 @@ contract MinimalAccountTest is Test {
     }
 
     function testRecoverSignedOp() public {
-          // Arrange
+        // Arrange
         assertEq(usdc.balanceOf(address(minimalAccount)), 0, "Initial USDC balance should be 0");
         address dest = address(usdc); // Target contract is the mock USDC
         uint256 value = 0; // No ETH value sent in the internal call from account to USDC
-         // Prepare calldata for: usdc.mint(address(minimalAccount), AMOUNT)
+        // Prepare calldata for: usdc.mint(address(minimalAccount), AMOUNT)
         bytes memory functionData = abi.encodeWithSelector(
             ERC20Mock.mint.selector, // Function selector for mint(address,uint256)
             address(minimalAccount), // Argument 1: recipient of minted tokens
             AMOUNT // Argument 2: amount to mint
         );
 
-        bytes memory executeCallData = abi.encodeWithSelector(
-            MinimalAccount.execute.selector,
-            dest,
-            value,
-            functionData
-        );
-        PackedUserOperation memory packedUserOp = sendPackedUserOp.generateSignedUserOperation(
-            executeCallData,
-            helperConfig.getConfig()
-        );
+        bytes memory executeCallData =
+            abi.encodeWithSelector(MinimalAccount.execute.selector, dest, value, functionData);
+        PackedUserOperation memory packedUserOp =
+            sendPackedUserOp.generateSignedUserOperation(executeCallData, helperConfig.getConfig());
         bytes32 userOpHash = IEntryPoint(helperConfig.getConfig().entryPoint).getUserOpHash(packedUserOp);
-        
+
         // Act
         address actualSigner = ECDSA.recover(userOpHash.toEthSignedMessageHash(), packedUserOp.signature);
-       // Assert
-         assertEq(actualSigner, minimalAccount.owner(), "Recovered signer should match the MinimalAccount owner");
+        // Assert
+        assertEq(actualSigner, minimalAccount.owner(), "Recovered signer should match the MinimalAccount owner");
+    }
+
+    function testValidateOfUserOps() public {
+        // Arrange
+        assertEq(usdc.balanceOf(address(minimalAccount)), 0, "Initial USDC balance should be 0");
+        address dest = address(usdc); // Target contract is the mock USDC
+        uint256 value = 0; // No ETH value sent in the internal call from account to USDC
+        // Prepare calldata for: usdc.mint(address(minimalAccount), AMOUNT)
+        bytes memory functionData = abi.encodeWithSelector(
+            ERC20Mock.mint.selector, // Function selector for mint(address,uint256)
+            address(minimalAccount), // Argument 1: recipient of minted tokens
+            AMOUNT // Argument 2: amount to mint
+        );
+
+        bytes memory executeCallData =
+            abi.encodeWithSelector(MinimalAccount.execute.selector, dest, value, functionData);
+        PackedUserOperation memory packedUserOp =
+            sendPackedUserOp.generateSignedUserOperation(executeCallData, helperConfig.getConfig());
+        bytes32 userOpHash = IEntryPoint(helperConfig.getConfig().entryPoint).getUserOpHash(packedUserOp);
+        uint256 missingAccountFunds = 1e18;
+
+        // Act
+        vm.prank(helperConfig.getConfig().entryPoint);
+        uint256 validationData = minimalAccount.validateUserOp(packedUserOp, userOpHash, missingAccountFunds);
+        // Assert
+        assertEq(validationData, 0, "Validation data should be 0 for valid signature");
     }
 }
