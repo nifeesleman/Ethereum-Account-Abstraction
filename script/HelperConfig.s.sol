@@ -42,14 +42,6 @@ contract HelperConfig is Script {
         if (localNetworkConfig.account != address(0)) {
             return localNetworkConfig;
         }
-        // For local Anvil network, we might need to deploy a mock EntryPoint
-        // address mockEntryPointAddress = deployMockEntryPoint(); // Placeholder
-        // For now, let's use Sepolia's EntryPoint or a defined mock if available
-        // This part would involve deploying a mock EntryPoint if one doesn't exist.
-        // For simplicity in this example, we'll assume a mock or reuse Sepolia's for structure.
-        // In a real scenario, you'd deploy a MockEntryPoint.sol here.
-        // Example: localNetworkConfig = NetworkConfig({ entryPoint: mockEntryPointAddress, account: BURNER_WALLET });
-        // Fallback for this lesson (actual mock deployment not shown):
         NetworkConfig memory sepoliaConfig = getEthSepoliaConfig(); // Or a specific local mock entry point
         localNetworkConfig = NetworkConfig({
             entryPoint: sepoliaConfig.entryPoint, // Replace with actual mock entry point if deployed
