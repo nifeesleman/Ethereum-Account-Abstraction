@@ -5,6 +5,7 @@ import {Script} from "forge-std/Script.sol";
 import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPoint.sol";
 
 contract HelperConfig is Script {
+    error HelperConfig__InvalidChainId();
     // Configuration struct
     struct NetworkConfig {
         address entryPoint;
@@ -39,16 +40,9 @@ contract HelperConfig is Script {
         return NetworkConfig({entryPoint: address(0), account: BURNER_WALLET});
     }
 
-    function getOrCreateAnvilEthConfig() public returns (NetworkConfig memory) {
-        if (localNetworkConfig.account != address(0)) {
-            return localNetworkConfig;
-        }
-        NetworkConfig memory sepoliaConfig = getEthSepoliaConfig(); // Or a specific local mock entry point
-        localNetworkConfig = NetworkConfig({
-            entryPoint: sepoliaConfig.entryPoint, // Replace with actual mock entry point if deployed
-            account: BURNER_WALLET
-        });
-        return localNetworkConfig;
+
+    function getConfig() public returns (NetworkConfig memory) {
+        return getConfigByChainId(block.chainid);
     }
 
     function getConfigByChainId(uint256 chainId) public returns (NetworkConfig memory) {
@@ -59,10 +53,18 @@ contract HelperConfig is Script {
             // Check if config exists
             return networkConfigs[chainId];
         }
-        revert("HelperConfig__InvalidChainId()");
+        revert HelperConfig__InvalidChainId();
     }
 
-    function getConfig() public returns (NetworkConfig memory) {
-        return getConfigByChainId(block.chainid);
+    function getOrCreateAnvilEthConfig() public returns (NetworkConfig memory) {
+        if (localNetworkConfig.account != address(0)) {
+            return localNetworkConfig;
+        }
+        NetworkConfig memory sepoliaConfig = getEthSepoliaConfig(); // Or a specific local mock entry point
+        localNetworkConfig = NetworkConfig({
+            entryPoint: sepoliaConfig.entryPoint, // Replace with actual mock entry point if deployed
+            account: BURNER_WALLET
+        });
+        return localNetworkConfig;
     }
 }
