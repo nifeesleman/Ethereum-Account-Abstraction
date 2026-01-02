@@ -60,11 +60,12 @@ contract HelperConfig is Script {
         if (localNetworkConfig.account != address(0)) {
             return localNetworkConfig;
         }
-        NetworkConfig memory sepoliaConfig = getEthSepoliaConfig(); // Or a specific local mock entry point
-        localNetworkConfig = NetworkConfig({
-            entryPoint: sepoliaConfig.entryPoint, // Replace with actual mock entry point if deployed
-            account: BURNER_WALLET
-        });
-        return localNetworkConfig;
+        // NetworkConfig memory sepoliaConfig = getEthSepoliaConfig(); // Or a specific local mock entry point
+        // localNetworkConfig = NetworkConfig({
+        //     entryPoint: sepoliaConfig.entryPoint, // Replace with actual mock entry point if deployed
+        //     account: BURNER_WALLET
+        // });
+        // return localNetworkConfig;
+      return  NetworkConfig({entryPoint: address(0), account: FOUNDRY_DEFAULT_WALLET});
     }
 }
