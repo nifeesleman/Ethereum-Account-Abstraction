@@ -24,7 +24,7 @@ contract SendPackedUserOp is
         bytes memory callData, // The target call data for the smart account's execution
         HelperConfig.NetworkConfig memory config // Network config containing EntryPoint address and signer
     )
-        internal
+        public
         returns (PackedUserOperation memory)
     {
         // Step 1: Generate the Unsigned UserOperation
@@ -52,7 +52,16 @@ contract SendPackedUserOp is
         // Step 3: Sign the digest
         // 'config.account' here is the EOA that owns/controls the smart account.
         // This EOA must be unlocked for vm.sign to work without a private key.
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(config.account, digest);
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
+        uint256 ANVIL_PRIVATE_KEY = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
+        if(block.chainid == 31337){
+            (v, r, s) = vm.sign(ANVIL_PRIVATE_KEY, digest);
+        } else {
+            (v, r, s) = vm.sign(config.account, digest);
+        }
+        // (uint8 v, bytes32 r, bytes32 s) = vm.sign(config.account, digest);
 
         // Construct the final signature.
         // IMPORTANT: The order is R, S, V (abi.encodePacked(r, s, v)).
