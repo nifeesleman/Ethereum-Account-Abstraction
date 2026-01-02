@@ -25,6 +25,7 @@ contract SendPackedUserOp is
         HelperConfig.NetworkConfig memory config // Network config containing EntryPoint address and signer
     )
         public
+        view
         returns (PackedUserOperation memory)
     {
         // Step 1: Generate the Unsigned UserOperation
