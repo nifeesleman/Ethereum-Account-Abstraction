@@ -6,6 +6,7 @@ import {MinimalAccount} from "src/ethereum/MinimalAccount.sol";
 import {DeployMinimal} from "script/DeployMinimal.s.sol";
 import {HelperConfig} from "script/HelperConfig.s.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
+import {SendPackedUserOp} from "script/SendPackedUserOp.s.sol";
 
 contract MinimalAccountTest is Test {
     HelperConfig helperConfig;
@@ -13,6 +14,7 @@ contract MinimalAccountTest is Test {
     ERC20Mock usdc;
     uint256 constant AMOUNT = 1e18; // Standard amount for minting (1 token with 18 decimals)
     address randomUser = makeAddr("randomUser"); // A deterministic address for non-owner tests
+    SendPackedUserOp sendPackedUserOp;
 
     function setUp() public {
         DeployMinimal deployMinimal = new DeployMinimal();

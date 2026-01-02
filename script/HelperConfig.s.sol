@@ -66,6 +66,10 @@ contract HelperConfig is Script {
         //     account: BURNER_WALLET
         // });
         // return localNetworkConfig;
-        return NetworkConfig({entryPoint: address(0), account: FOUNDRY_DEFAULT_WALLET});
+        vm.startBroadcast(FOUNDRY_DEFAULT_WALLET);
+        console2.log("Creating new Anvil network config...");
+        EntryPoint entryPoint = new EntryPoint();
+        vm.stopBroadcast();
+        return NetworkConfig({entryPoint: address(entryPoint), account: FOUNDRY_DEFAULT_WALLET});
     }
 }
