@@ -6,6 +6,7 @@ import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPo
 
 contract HelperConfig is Script {
     error HelperConfig__InvalidChainId();
+
     // Configuration struct
     struct NetworkConfig {
         address entryPoint;
@@ -40,7 +41,6 @@ contract HelperConfig is Script {
         return NetworkConfig({entryPoint: address(0), account: BURNER_WALLET});
     }
 
-
     function getConfig() public returns (NetworkConfig memory) {
         return getConfigByChainId(block.chainid);
     }
@@ -66,6 +66,6 @@ contract HelperConfig is Script {
         //     account: BURNER_WALLET
         // });
         // return localNetworkConfig;
-      return  NetworkConfig({entryPoint: address(0), account: FOUNDRY_DEFAULT_WALLET});
+        return NetworkConfig({entryPoint: address(0), account: FOUNDRY_DEFAULT_WALLET});
     }
 }

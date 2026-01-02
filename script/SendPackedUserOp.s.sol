@@ -1,19 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-
 import {PackedUserOperation} from "lib/account-abstraction/contracts/interfaces/PackedUserOperation.sol";
 import {HelperConfig, NetworkConfig} from "script/HelperConfig.s.sol"; // Assuming NetworkConfig is defined or imported here
 import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPoint.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
-
 // In SendPackedUserOp.s.sol
 // Make sure MessageHashUtils is available for bytes32
 using MessageHashUtils for bytes32;
 
-contract SendPackedUserOp is Script { // Or your preferred base contract
-
+contract SendPackedUserOp is
+    Script // Or your preferred base contract
+{
     HelperConfig public helperConfig;
 
     function setUp() public {
@@ -21,9 +20,12 @@ contract SendPackedUserOp is Script { // Or your preferred base contract
     }
 
     function generateSignedUserOperation(
-        bytes memory callData,        // The target call data for the smart account's execution
+        bytes memory callData, // The target call data for the smart account's execution
         HelperConfig.NetworkConfig memory config // Network config containing EntryPoint address and signer
-    ) internal returns (PackedUserOperation memory) {
+    )
+        internal
+        returns (PackedUserOperation memory)
+    {
         // Step 1: Generate the Unsigned UserOperation
         // Fetch the nonce for the sender (smart account address) from the EntryPoint
         // For simplicity, we'll assume the 'config.account' is the smart account for now,
@@ -64,7 +66,11 @@ contract SendPackedUserOp is Script { // Or your preferred base contract
         bytes memory callData,
         address sender, // Smart account address
         uint256 nonce
-    ) internal pure returns (PackedUserOperation memory) {
+    )
+        internal
+        pure
+        returns (PackedUserOperation memory)
+    {
         // Placeholder gas values; these should be estimated or configured properly
         uint256 verificationGasLimit = 200000;
         uint256 callGasLimit = 300000;
