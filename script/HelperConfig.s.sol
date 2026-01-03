@@ -23,7 +23,7 @@ contract HelperConfig is Script {
     // Official Sepolia EntryPoint address: 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789
     // address constant FOUNDRY_DEFAULT_WALLET = 0x1804c8AB1F12E6bbf3894d4083f33e07309d1f38;
     address constant ANVIL_DEFAULT_WALLET = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266; // Anvil default
-    address constant BURNER_WALLET = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266; // Replace with your actual address
+    address constant BURNER_WALLET = 0x8AcADf16765C1A7968610e87E76Bb5574B0d43E0; // Replace with your actual address
 
     // State Variables
     NetworkConfig public localNetworkConfig;

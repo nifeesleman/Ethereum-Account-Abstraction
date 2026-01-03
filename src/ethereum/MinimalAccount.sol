@@ -59,6 +59,7 @@ contract MinimalAccount is Ownable {
         bytes32 userOpHash,
         uint256 missingAccountFunds
     ) external returns (uint256 validationData) {
+        _requireFromEntryPoint();
         validationData = _validateSignature(userOp, userOpHash);
         _payPrefund(missingAccountFunds);
     }
@@ -99,9 +100,7 @@ contract MinimalAccount is Ownable {
     function _payPrefund(uint256 missingAccountFunds) internal {
         if (missingAccountFunds != 0) {
             (bool success,) = payable(msg.sender).call{value: missingAccountFunds, gas: type(uint256).max}("");
-            (success);
-            // In a real implementation, you would transfer the required funds to the EntryPoint here.
-            // For simplicity, this example does not implement actual fund transfers.
+            require(success, "MinimalAccount: failed to pay prefund");
         }
     }
     // / ///////////////////////////////////////////////////////////////////////////
