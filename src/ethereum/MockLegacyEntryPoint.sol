@@ -8,6 +8,9 @@ import {MinimalAccount} from "src/ethereum/MinimalAccount.sol";
 contract MockLegacyEntryPoint is ILegacyEntryPoint {
     mapping(address sender => uint256 nonce) public nonces;
 
+    // Allow accounts to send prefund ETH during validation
+    receive() external payable {}
+
     function getNonce(
         address sender,
         uint192 /*key*/
