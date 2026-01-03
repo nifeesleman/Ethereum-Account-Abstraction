@@ -2,12 +2,11 @@
 pragma solidity 0.8.24;
 
 import {Script, console2} from "forge-std/Script.sol";
-import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPoint.sol";
-import {EntryPoint} from "lib/account-abstraction/contracts/core/EntryPoint.sol";
+import {MockLegacyEntryPoint} from "src/ethereum/MockLegacyEntryPoint.sol";
 
 contract HelperConfig is Script {
     error HelperConfig__InvalidChainId();
-    IEntryPoint public entryPoint; // Latest deployed EntryPoint for local configs
+    address public entryPoint; // Latest deployed EntryPoint for local configs
 
     // Configuration struct
     struct NetworkConfig {
@@ -39,6 +38,7 @@ contract HelperConfig is Script {
     function getEthSepoliaConfig() public pure returns (NetworkConfig memory) {
         return NetworkConfig({entryPoint: 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789, account: BURNER_WALLET});
     }
+
     function getArbitrumMainnetConfig() public pure returns (NetworkConfig memory) {
         return NetworkConfig({
             entryPoint: 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789, // Example EntryPoint on Arbitrum
@@ -78,10 +78,10 @@ contract HelperConfig is Script {
         // });
         // return localNetworkConfig;
         vm.startBroadcast(ANVIL_DEFAULT_WALLET);
-        console2.log("Creating new Anvil network config...");
-        EntryPoint deployedEntryPoint = new EntryPoint();
+        console2.log("Creating new Anvil network config (legacy EntryPoint mock)...");
+        MockLegacyEntryPoint deployedEntryPoint = new MockLegacyEntryPoint();
         vm.stopBroadcast();
-        entryPoint = IEntryPoint(address(deployedEntryPoint));
+        entryPoint = address(deployedEntryPoint);
         localNetworkConfig = NetworkConfig({entryPoint: address(deployedEntryPoint), account: ANVIL_DEFAULT_WALLET});
         return localNetworkConfig;
     }
