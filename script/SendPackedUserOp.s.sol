@@ -22,8 +22,7 @@ contract SendPackedUserOp is
     Script // Or your preferred base contract
 {
     HelperConfig public helperConfig;
-    uint256 private constant DEFAULT_ANVIL_PK =
-        0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
+    uint256 private constant DEFAULT_ANVIL_PK = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
 
     function run() public {
         helperConfig = new HelperConfig();
@@ -37,27 +36,23 @@ contract SendPackedUserOp is
 
         uint256 signerPk = _getSignerPrivateKey();
         address signer = vm.addr(signerPk);
-        
+
         // Verify that the signer matches the account owner
         address accountOwner = MinimalAccount(payable(smartAccount)).owner();
         require(signer == accountOwner, "Signer must be the account owner");
-        
+
         console2.log("Smart Account:", smartAccount);
         console2.log("Signer/Owner:", signer);
         console2.log("EntryPoint:", config.entryPoint);
 
         // Generate user operation
         bytes memory executeCallData = _buildExecuteCallData();
-        ILegacyEntryPoint.UserOperation memory userOp = generateSignedUserOperation(
-            executeCallData,
-            config,
-            smartAccount,
-            signerPk
-        );
+        ILegacyEntryPoint.UserOperation memory userOp =
+            generateSignedUserOperation(executeCallData, config, smartAccount, signerPk);
 
         uint256 requiredPrefund = _estimatePrefund(userOp);
         vm.startBroadcast(signerPk);
-        
+
         _ensurePrefund(smartAccount, config.entryPoint, requiredPrefund, signerPk);
         _ensureAccountBalance(smartAccount, requiredPrefund, signer);
 
@@ -69,12 +64,12 @@ contract SendPackedUserOp is
         console2.log("Required prefund:", requiredPrefund);
         console2.log("Account ETH balance:", smartAccount.balance);
         console2.log("EntryPoint deposit:", IEntryPointPayable(config.entryPoint).balanceOf(smartAccount));
-        
+
         // Note: If this fails with AA23 error, the deployed MinimalAccount contract
         // may be an old version without the EntryPoint check and proper error handling.
         // Redeploy MinimalAccount with the latest code using DeployMinimal.s.sol
         ILegacyEntryPoint(config.entryPoint).handleOps(ops, payable(config.account));
-        
+
         console2.log("User operation executed successfully!");
         vm.stopBroadcast();
     }
@@ -101,27 +96,27 @@ contract SendPackedUserOp is
         // Add generous buffer to account for gas price fluctuations and ensure payment succeeds
         uint256 requiredBalance = requiredPrefund + (requiredPrefund / 2); // 50% buffer
         uint256 accountBalance = smartAccount.balance;
-        
+
         if (accountBalance >= requiredBalance) {
             return;
         }
-        
+
         uint256 needed = requiredBalance - accountBalance;
         uint256 signerBal = signer.balance;
         // Reserve more ETH for transaction fees on Arbitrum
         uint256 reserveForFees = 0.0002 ether;
-        
+
         if (signerBal <= reserveForFees) {
             console2.log("Warning: Signer has insufficient balance for fees");
             return;
         }
-        
+
         uint256 available = signerBal - reserveForFees;
         if (needed > available) {
             needed = available;
             console2.log("Warning: Transferring partial amount due to signer balance limits");
         }
-        
+
         if (needed > 0) {
             payable(smartAccount).transfer(needed);
             console2.log("Transferred ETH to account:", needed);

@@ -16,7 +16,7 @@ contract DeployMinimal is Script {
     function deployMinimalAccount() public returns (HelperConfig, MinimalAccount) {
         HelperConfig helperConfig = new HelperConfig();
         HelperConfig.NetworkConfig memory config = helperConfig.getConfig();
-        
+
         // Handle private key: works with both --private-key flag and PRIVATE_KEY env var
         // For local Anvil, use default key
         if (block.chainid == 31337) {

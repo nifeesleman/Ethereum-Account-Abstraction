@@ -20,6 +20,7 @@ contract MinimalAccountTest is Test {
     uint256 constant AMOUNT = 1e18; // Standard amount for minting (1 token with 18 decimals)
     address randomUser = makeAddr("randomUser"); // A deterministic address for non-owner tests
     SendPackedUserOp sendPackedUserOp;
+    uint256 constant DEFAULT_ANVIL_PK = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
 
     function setUp() public {
         DeployMinimal deployMinimal = new DeployMinimal();
@@ -84,8 +85,10 @@ contract MinimalAccountTest is Test {
 
         bytes memory executeCallData =
             abi.encodeWithSelector(MinimalAccount.execute.selector, dest, value, functionData);
+        // Use the account owner's private key for signing (default Anvil key in tests)
+        uint256 signerPk = DEFAULT_ANVIL_PK;
         ILegacyEntryPoint.UserOperation memory packedUserOp = sendPackedUserOp.generateSignedUserOperation(
-            executeCallData, helperConfig.getConfig(), address(minimalAccount)
+            executeCallData, helperConfig.getConfig(), address(minimalAccount), signerPk
         );
         bytes32 userOpHash = ILegacyEntryPoint(helperConfig.getConfig().entryPoint).getUserOpHash(packedUserOp);
 
@@ -109,11 +112,16 @@ contract MinimalAccountTest is Test {
 
         bytes memory executeCallData =
             abi.encodeWithSelector(MinimalAccount.execute.selector, dest, value, functionData);
+        // Use the account owner's private key for signing (default Anvil key in tests)
+        uint256 signerPk = DEFAULT_ANVIL_PK;
         ILegacyEntryPoint.UserOperation memory packedUserOp = sendPackedUserOp.generateSignedUserOperation(
-            executeCallData, helperConfig.getConfig(), address(minimalAccount)
+            executeCallData, helperConfig.getConfig(), address(minimalAccount), signerPk
         );
         bytes32 userOpHash = ILegacyEntryPoint(helperConfig.getConfig().entryPoint).getUserOpHash(packedUserOp);
         uint256 missingAccountFunds = 1e18;
+
+        // Fund the account so it can pay the prefund
+        vm.deal(address(minimalAccount), missingAccountFunds);
 
         // Act
         vm.prank(helperConfig.getConfig().entryPoint);
@@ -159,8 +167,10 @@ contract MinimalAccountTest is Test {
 
         bytes memory executeCallData =
             abi.encodeWithSelector(MinimalAccount.execute.selector, dest, value, functionData);
+        // Use the account owner's private key for signing (default Anvil key in tests)
+        uint256 signerPk = DEFAULT_ANVIL_PK;
         ILegacyEntryPoint.UserOperation memory packedUserOp = sendPackedUserOp.generateSignedUserOperation(
-            executeCallData, helperConfig.getConfig(), address(minimalAccount)
+            executeCallData, helperConfig.getConfig(), address(minimalAccount), signerPk
         );
         // bytes32 userOpHash = IEntryPoint(helperConfig.getConfig().entryPoint).getUserOpHash(packedUserOp);
 
