@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
-import {IAccount} from "lib/account-abstraction/contracts/interfaces/IAccount.sol";
-import {PackedUserOperation} from "lib/account-abstraction/contracts/interfaces/PackedUserOperation.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import {SIG_VALIDATION_FAILED, SIG_VALIDATION_SUCCESS} from "lib/account-abstraction/contracts/core/Helpers.sol";
-import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPoint.sol";
+import {ILegacyEntryPoint} from "src/ethereum/ILegacyEntryPoint.sol";
+
+uint256 constant SIG_VALIDATION_SUCCESS = 0;
+uint256 constant SIG_VALIDATION_FAILED = 1;
 
 // The flow for ERC-4337 typically involves an EntryPoint contract
 // calling into this account contract.
-contract MinimalAccount is IAccount, Ownable {
+contract MinimalAccount is Ownable {
     ////////////////////////////////////////////////////////////////
     //                         ERRORS                             //
     ////////////////////////////////////////////////////////////////
     error MinimalAccount__NotFromEntryPoint();
     error MinimalAccount__NotFromEntryPointOrOwner(); // New
     error MinimalAccount__CallFailed(bytes result); // New
-    IEntryPoint private immutable i_entryPoint;
+    address private immutable i_entryPoint;
 
     modifier requireFromEntryPoint() {
         _requireFromEntryPoint();
@@ -37,7 +37,7 @@ contract MinimalAccount is IAccount, Ownable {
     receive() external payable {}
 
     constructor(address entryPoint) Ownable(msg.sender) {
-        i_entryPoint = IEntryPoint(entryPoint);
+        i_entryPoint = entryPoint;
     }
 
     ////////////////////////////////////////////////////////////////
@@ -54,10 +54,11 @@ contract MinimalAccount is IAccount, Ownable {
         }
     }
 
-    function validateUserOp(PackedUserOperation calldata userOp, bytes32 userOpHash, uint256 missingAccountFunds)
-        external
-        returns (uint256 validationData)
-    {
+    function validateUserOp(
+        ILegacyEntryPoint.UserOperation calldata userOp,
+        bytes32 userOpHash,
+        uint256 missingAccountFunds
+    ) external returns (uint256 validationData) {
         validationData = _validateSignature(userOp, userOpHash);
         _payPrefund(missingAccountFunds);
     }
@@ -78,7 +79,7 @@ contract MinimalAccount is IAccount, Ownable {
         }
     }
 
-    function _validateSignature(PackedUserOperation calldata userOp, bytes32 userOpHash)
+    function _validateSignature(ILegacyEntryPoint.UserOperation calldata userOp, bytes32 userOpHash)
         internal
         view
         returns (uint256 validationData)
@@ -108,6 +109,6 @@ contract MinimalAccount is IAccount, Ownable {
     // / ///////////////////////////////////////////////////////////////////////////
 
     function getEntryPoint() external view returns (address) {
-        return address(i_entryPoint);
+        return i_entryPoint;
     }
 }
