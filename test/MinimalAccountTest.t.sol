@@ -6,10 +6,10 @@ import {MinimalAccount} from "src/ethereum/MinimalAccount.sol";
 import {DeployMinimal} from "script/DeployMinimal.s.sol";
 import {HelperConfig} from "script/HelperConfig.s.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
-import {SendPackedUserOp, PackedUserOperation} from "script/SendPackedUserOp.s.sol";
+import {SendPackedUserOp} from "script/SendPackedUserOp.s.sol";
+import {ILegacyEntryPoint} from "src/ethereum/ILegacyEntryPoint.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
-import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPoint.sol";
 
 contract MinimalAccountTest is Test {
     using MessageHashUtils for bytes32;
@@ -22,6 +22,7 @@ contract MinimalAccountTest is Test {
     SendPackedUserOp sendPackedUserOp;
 
     function setUp() public {
+        vm.setEnv("PRIVATE_KEY", "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80");
         DeployMinimal deployMinimal = new DeployMinimal();
         // Deploy MinimalAccount using our deployment script
         (helperConfig, minimalAccount) = deployMinimal.deployMinimalAccount();
@@ -84,10 +85,10 @@ contract MinimalAccountTest is Test {
 
         bytes memory executeCallData =
             abi.encodeWithSelector(MinimalAccount.execute.selector, dest, value, functionData);
-        PackedUserOperation memory packedUserOp = sendPackedUserOp.generateSignedUserOperation(
+        ILegacyEntryPoint.UserOperation memory packedUserOp = sendPackedUserOp.generateSignedUserOperation(
             executeCallData, helperConfig.getConfig(), address(minimalAccount)
         );
-        bytes32 userOpHash = IEntryPoint(helperConfig.getConfig().entryPoint).getUserOpHash(packedUserOp);
+        bytes32 userOpHash = ILegacyEntryPoint(helperConfig.getConfig().entryPoint).getUserOpHash(packedUserOp);
 
         // Act
         address actualSigner = ECDSA.recover(userOpHash.toEthSignedMessageHash(), packedUserOp.signature);
@@ -109,10 +110,10 @@ contract MinimalAccountTest is Test {
 
         bytes memory executeCallData =
             abi.encodeWithSelector(MinimalAccount.execute.selector, dest, value, functionData);
-        PackedUserOperation memory packedUserOp = sendPackedUserOp.generateSignedUserOperation(
+        ILegacyEntryPoint.UserOperation memory packedUserOp = sendPackedUserOp.generateSignedUserOperation(
             executeCallData, helperConfig.getConfig(), address(minimalAccount)
         );
-        bytes32 userOpHash = IEntryPoint(helperConfig.getConfig().entryPoint).getUserOpHash(packedUserOp);
+        bytes32 userOpHash = ILegacyEntryPoint(helperConfig.getConfig().entryPoint).getUserOpHash(packedUserOp);
         uint256 missingAccountFunds = 1e18;
 
         // Act
@@ -159,19 +160,19 @@ contract MinimalAccountTest is Test {
 
         bytes memory executeCallData =
             abi.encodeWithSelector(MinimalAccount.execute.selector, dest, value, functionData);
-        PackedUserOperation memory packedUserOp = sendPackedUserOp.generateSignedUserOperation(
+        ILegacyEntryPoint.UserOperation memory packedUserOp = sendPackedUserOp.generateSignedUserOperation(
             executeCallData, helperConfig.getConfig(), address(minimalAccount)
         );
         // bytes32 userOpHash = IEntryPoint(helperConfig.getConfig().entryPoint).getUserOpHash(packedUserOp);
 
         vm.deal(address(minimalAccount), 1e18);
-        PackedUserOperation[] memory ops = new PackedUserOperation[](1);
+        ILegacyEntryPoint.UserOperation[] memory ops = new ILegacyEntryPoint.UserOperation[](1);
         ops[0] = packedUserOp;
 
         // Act & Assert (Combined using expectRevert)
 
         vm.prank(randomUser);
-        IEntryPoint(helperConfig.getConfig().entryPoint).handleOps(ops, payable(randomUser));
+        ILegacyEntryPoint(helperConfig.getConfig().entryPoint).handleOps(ops, payable(randomUser));
         // Expect the call to revert with the specific error from the modifier
         assertEq(usdc.balanceOf(address(minimalAccount)), AMOUNT, "MinimalAccount should have minted USDC");
     }
