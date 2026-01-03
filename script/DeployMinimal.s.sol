@@ -16,12 +16,39 @@ contract DeployMinimal is Script {
     function deployMinimalAccount() public returns (HelperConfig, MinimalAccount) {
         HelperConfig helperConfig = new HelperConfig();
         HelperConfig.NetworkConfig memory config = helperConfig.getConfig();
-        uint256 deployerKey = vm.envOr("PRIVATE_KEY", DEFAULT_ANVIL_PK);
-        address deployer = vm.addr(deployerKey);
-        vm.startBroadcast(deployerKey);
-        MinimalAccount minimalAccount = new MinimalAccount(config.entryPoint);
-        minimalAccount.transferOwnership(deployer);
-        vm.stopBroadcast();
-        return (helperConfig, minimalAccount);
+        
+        // Handle private key: works with both --private-key flag and PRIVATE_KEY env var
+        // For local Anvil, use default key
+        if (block.chainid == 31337) {
+            // Local Anvil network - use default key
+            uint256 deployerKey = DEFAULT_ANVIL_PK;
+            address deployer = vm.addr(deployerKey);
+            vm.startBroadcast(deployerKey);
+            MinimalAccount minimalAccount = new MinimalAccount(config.entryPoint);
+            // Account owner is set to msg.sender in constructor, but we want it to be deployer
+            minimalAccount.transferOwnership(deployer);
+            vm.stopBroadcast();
+            return (helperConfig, minimalAccount);
+        } else {
+            // For mainnet/testnet: try environment variable first, then --private-key flag
+            try vm.envUint("PRIVATE_KEY") returns (uint256 deployerKey) {
+                // PRIVATE_KEY env var is set
+                address deployer = vm.addr(deployerKey);
+                vm.startBroadcast(deployerKey);
+                MinimalAccount minimalAccount = new MinimalAccount(config.entryPoint);
+                minimalAccount.transferOwnership(deployer);
+                vm.stopBroadcast();
+                return (helperConfig, minimalAccount);
+            } catch {
+                // PRIVATE_KEY env var not set, use --private-key flag
+                // vm.startBroadcast() without args uses the --private-key flag value
+                vm.startBroadcast();
+                MinimalAccount minimalAccount = new MinimalAccount(config.entryPoint);
+                // Account owner is already set to msg.sender (the deployer from --private-key)
+                // No need to transfer ownership as it's already correct
+                vm.stopBroadcast();
+                return (helperConfig, minimalAccount);
+            }
+        }
     }
 }
