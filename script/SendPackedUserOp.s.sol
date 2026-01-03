@@ -6,6 +6,7 @@ import {HelperConfig} from "script/HelperConfig.s.sol"; // Assuming NetworkConfi
 import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPoint.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {Script} from "forge-std/Script.sol";
+import {MinimalAccount} from "src/ethereum/MinimalAccount.sol";
 
 // In SendPackedUserOp.s.sol
 // Make sure MessageHashUtils is available for bytes32
@@ -22,23 +23,20 @@ contract SendPackedUserOp is
 
     function generateSignedUserOperation(
         bytes memory callData, // The target call data for the smart account's execution
-        HelperConfig.NetworkConfig memory config // Network config containing EntryPoint address and signer
-    )
-        public
-        view
-        returns (PackedUserOperation memory)
-    {
+        HelperConfig.NetworkConfig memory config, // Network config containing EntryPoint address and signer
+        address MinimalAccount // The smart account address
+    ) public view returns (PackedUserOperation memory) {
         // Step 1: Generate the Unsigned UserOperation
         // Fetch the nonce for the sender (smart account address) from the EntryPoint
         // For simplicity, we'll assume the 'config.account' is the smart account for now,
         // though in reality, this would be the smart account address, and config.account the EOA owner.
         // Nonce would be: IEntryPoint(config.entryPoint).getNonce(config.account, nonceKey);
         // For this example, let's use a placeholder nonce or assume it's passed in.
-        uint256 nonce = IEntryPoint(config.entryPoint).getNonce(config.account, 0); // Simplified nonce retrieval
+        uint256 nonce = IEntryPoint(config.entryPoint).getNonce(MinimalAccount, 0); // Simplified nonce retrieval
 
         PackedUserOperation memory userOp = _generateUnsignedUserOperation(
             callData,
-            config.account, // This should be the smart account address
+            MinimalAccount, // This should be the smart account address
             nonce
         );
 
