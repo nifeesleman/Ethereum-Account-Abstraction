@@ -8,11 +8,19 @@ import {MinimalAccount} from "src/ethereum/MinimalAccount.sol";
 contract MockLegacyEntryPoint is ILegacyEntryPoint {
     mapping(address sender => uint256 nonce) public nonces;
 
-    function getNonce(address sender, uint192 /*key*/ ) external view override returns (uint256) {
+    function getNonce(
+        address sender,
+        uint192 /*key*/
+    )
+        external
+        view
+        override
+        returns (uint256)
+    {
         return nonces[sender];
     }
 
-    function getUserOpHash(UserOperation calldata userOp) public pure override returns (bytes32) {
+    function getUserOpHash(UserOperation calldata userOp) public pure override returns (bytes32 hash) {
         // Hash excluding the signature so signing/verifying aligns.
         UserOperation memory tmp = UserOperation({
             sender: userOp.sender,
@@ -27,10 +35,19 @@ contract MockLegacyEntryPoint is ILegacyEntryPoint {
             paymasterAndData: userOp.paymasterAndData,
             signature: bytes("")
         });
-        return keccak256(abi.encode(tmp));
+        bytes memory enc = abi.encode(tmp);
+        assembly {
+            hash := keccak256(add(enc, 0x20), mload(enc))
+        }
     }
 
-    function handleOps(UserOperation[] calldata ops, address payable /*beneficiary*/ ) external override {
+    function handleOps(
+        UserOperation[] calldata ops,
+        address payable /*beneficiary*/
+    )
+        external
+        override
+    {
         for (uint256 i = 0; i < ops.length; i++) {
             UserOperation calldata op = ops[i];
             nonces[op.sender]++;

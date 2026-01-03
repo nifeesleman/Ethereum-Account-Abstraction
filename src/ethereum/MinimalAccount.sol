@@ -17,7 +17,7 @@ contract MinimalAccount is Ownable {
     error MinimalAccount__NotFromEntryPoint();
     error MinimalAccount__NotFromEntryPointOrOwner(); // New
     error MinimalAccount__CallFailed(bytes result); // New
-    address private immutable i_entryPoint;
+    address private immutable I_ENTRY_POINT;
 
     modifier requireFromEntryPoint() {
         _requireFromEntryPoint();
@@ -37,7 +37,7 @@ contract MinimalAccount is Ownable {
     receive() external payable {}
 
     constructor(address entryPoint) Ownable(msg.sender) {
-        i_entryPoint = entryPoint;
+        I_ENTRY_POINT = entryPoint;
     }
 
     ////////////////////////////////////////////////////////////////
@@ -68,13 +68,13 @@ contract MinimalAccount is Ownable {
     ////////////////////////////////////////////////////////////////
 
     function _requireFromEntryPoint() internal view {
-        if (msg.sender != address(i_entryPoint)) {
+        if (msg.sender != address(I_ENTRY_POINT)) {
             revert MinimalAccount__NotFromEntryPoint();
         }
     }
 
     function _requireFromEntryPointOrOwner() internal view {
-        if (msg.sender != address(i_entryPoint) && msg.sender != owner()) {
+        if (msg.sender != address(I_ENTRY_POINT) && msg.sender != owner()) {
             revert MinimalAccount__NotFromEntryPointOrOwner();
         }
     }
@@ -109,6 +109,6 @@ contract MinimalAccount is Ownable {
     // / ///////////////////////////////////////////////////////////////////////////
 
     function getEntryPoint() external view returns (address) {
-        return i_entryPoint;
+        return I_ENTRY_POINT;
     }
 }

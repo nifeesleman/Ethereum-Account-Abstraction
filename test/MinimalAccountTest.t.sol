@@ -22,7 +22,6 @@ contract MinimalAccountTest is Test {
     SendPackedUserOp sendPackedUserOp;
 
     function setUp() public {
-        vm.setEnv("PRIVATE_KEY", "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80");
         DeployMinimal deployMinimal = new DeployMinimal();
         // Deploy MinimalAccount using our deployment script
         (helperConfig, minimalAccount) = deployMinimal.deployMinimalAccount();
