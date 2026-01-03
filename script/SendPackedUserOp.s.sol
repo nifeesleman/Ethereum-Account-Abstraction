@@ -7,6 +7,7 @@ import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPo
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {Script} from "forge-std/Script.sol";
 import {MinimalAccount} from "src/ethereum/MinimalAccount.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // In SendPackedUserOp.s.sol
 // Make sure MessageHashUtils is available for bytes32
@@ -19,6 +20,29 @@ contract SendPackedUserOp is
 
     function setUp() public {
         helperConfig = new HelperConfig();
+        address dest = 0xaf88d065e77c8cC2239327C5EDb3A432268e5831; // Arbitrum Mainnet USDC
+        uint256 value = 0; // No ETH value sent in the internal call from account to USDC
+        bytes memory functionData = abi.encodeWithSelector(
+            IERC20.approve.selector,
+            0x9EA9b0cc1919def1A3CfAEF4F7A66eE3c36F86fC, // Spender address (another EOA)
+            1e18 // Amount to approve (Note: USDC has 6 decimals, so 1e18 is a very large USDC amount)
+        );
+        bytes memory executeCallData =
+            abi.encodeWithSelector(MinimalAccount.execute.selector, dest, value, functionData);
+        // The MinimalAccount address deployed earlier
+        address minimalAccountAddress = address(0x03Ad95a54f02A40180D45D76789C448024145aaF);
+        PackedUserOperation memory userOp = generateSignedUserOperation(
+            executeCallData,
+            helperConfig.getConfig(), // Contains network config like EntryPoint address
+            minimalAccountAddress
+        );
+        PackedUserOperation[] memory ops = new PackedUserOperation[](1);
+        ops[0] = userOp;
+        vm.startBroadcast();
+        // The beneficiary address receives gas refunds
+        address payable beneficiary = payable(helperConfig.getConfig().account); // Typically the burner account
+        IEntryPoint(helperConfig.getConfig().entryPoint).handleOps(ops, beneficiary);
+        vm.stopBroadcast();
     }
 
     function generateSignedUserOperation(

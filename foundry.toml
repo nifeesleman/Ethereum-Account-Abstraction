@@ -4,4 +4,10 @@ out = "out"
 libs = ["lib"]
 remappings = ["@openzeppelin/contracts=lib/openzeppelin-contracts/contracts"]
 
+[rpc_endpoints]
+arbitrums = "https://arb-mainnet.g.alchemy.com/v2/sp56I1b0oNcCSuNHCSb81JHQyaa4ywv3"
+
+[etherscan]
+arbitrum = { key = "${ARBISCAN_API_KEY}" }
+
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
