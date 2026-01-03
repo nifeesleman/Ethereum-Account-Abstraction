@@ -18,7 +18,7 @@ contract SendPackedUserOp is
 {
     HelperConfig public helperConfig;
 
-    function setUp() public {
+    function run() public {
         helperConfig = new HelperConfig();
         address dest = 0xaf88d065e77c8cC2239327C5EDb3A432268e5831; // Arbitrum Mainnet USDC
         uint256 value = 0; // No ETH value sent in the internal call from account to USDC
@@ -48,7 +48,7 @@ contract SendPackedUserOp is
     function generateSignedUserOperation(
         bytes memory callData, // The target call data for the smart account's execution
         HelperConfig.NetworkConfig memory config, // Network config containing EntryPoint address and signer
-        address MinimalAccount // The smart account address
+        address minimalAccount // The smart account address
     ) public view returns (PackedUserOperation memory) {
         // Step 1: Generate the Unsigned UserOperation
         // Fetch the nonce for the sender (smart account address) from the EntryPoint
@@ -56,11 +56,11 @@ contract SendPackedUserOp is
         // though in reality, this would be the smart account address, and config.account the EOA owner.
         // Nonce would be: IEntryPoint(config.entryPoint).getNonce(config.account, nonceKey);
         // For this example, let's use a placeholder nonce or assume it's passed in.
-        uint256 nonce = IEntryPoint(config.entryPoint).getNonce(MinimalAccount, 0); // Simplified nonce retrieval
+        uint256 nonce = IEntryPoint(config.entryPoint).getNonce(minimalAccount, 0); // Simplified nonce retrieval
 
         PackedUserOperation memory userOp = _generateUnsignedUserOperation(
             callData,
-            MinimalAccount, // This should be the smart account address
+            minimalAccount, // This should be the smart account address
             nonce
         );
 
