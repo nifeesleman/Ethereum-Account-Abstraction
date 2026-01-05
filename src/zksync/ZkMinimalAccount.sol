@@ -8,14 +8,22 @@ import {IAccount} from "lib/foundry-era-contracts/src/system-contracts/contracts
 import {
     Transaction
 } from "lib/foundry-era-contracts/src/system-contracts/contracts/libraries/MemoryTransactionHelper.sol";
+import {SystemContractsCaller} from "lib/foundry-era-contracts/src/system-contracts/contracts/SystemContractsCaller.sol";
 
 contract ZkMinimalAccount is IAccount {
+
     function validateTransaction(bytes32 _txHash, bytes32 _suggestedSignedHash, Transaction memory _transaction)
         external
         payable
         override
         returns (bytes4 magic)
     {
+    SystemContractsCaller.systemCallWithPropagatedRevert(
+    uint32(gasleft()), // gas limit for the call
+    address(NONCE_HOLDER_SYSTEM_CONTRACT), // Address of the system contract
+    0, // value to send (must be 0 for system calls)
+    abi.encodeCall(INonceHolder.incrementMinNonceIfEquals, (_transaction.nonce)) // Encoded function call data
+);
         revert("Not implemented"); // Placeholder
     }
 
