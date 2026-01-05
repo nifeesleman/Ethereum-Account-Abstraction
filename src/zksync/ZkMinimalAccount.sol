@@ -12,6 +12,13 @@ import {SystemContractsCaller} from "lib/foundry-era-contracts/src/system-contra
 
 contract ZkMinimalAccount is IAccount {
 
+
+modifier requireFromBootloader() {
+    if (msg.sender != BOOTLOADER_FORMAL_ADDRESS) { // Check caller
+        revert ZkMinimalAccount__NotFromBootloader(); // Custom error
+    }
+    _; // Proceed if check passes
+}
     function validateTransaction(bytes32 _txHash, bytes32 _suggestedSignedHash, Transaction memory _transaction)
         external
         payable
