@@ -72,6 +72,12 @@ contract ZkMinimalAccount is IAccount {
         payable
         override
     {
-        revert("Not implemented"); // Placeholder
+        // Implement paymaster preparation logic here
+        // Example: validate transaction, prepare for paymaster, and emit events
+        require(_transaction.to != address(0), "Invalid recipient address");
+
+        // Prepare for paymaster (this is a placeholder, actual implementation may vary)
+        // Emit an event for the prepared transaction
+        emit PaymasterPrepared(_txHash, _transaction.to, _transaction.value);
     }
 }
