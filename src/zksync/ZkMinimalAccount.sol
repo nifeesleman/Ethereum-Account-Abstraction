@@ -48,7 +48,7 @@ contract ZkMinimalAccount is IAccount {
         require(_transaction.value > 0, "Transaction value must be greater than zero");
 
         // Execute the transaction (this is a placeholder, actual implementation may vary)
-        (bool success, ) = _transaction.to.call{value: _transaction.value}(_transaction.data);
+        (bool success,) = _transaction.to.call{value: _transaction.value}(_transaction.data);
         require(success, "Transaction execution failed");
 
         // Emit an event for the executed transaction
