@@ -83,18 +83,7 @@ function _validateTransaction(Transaction memory _transaction) internal returns 
         payable
         override
     {
-        // Implement transaction logic here
-        // Example: validate transaction, execute, and emit events
-        // Validate the transaction
-        require(_transaction.to != address(0), "Invalid recipient address");
-        require(_transaction.value > 0, "Transaction value must be greater than zero");
-
-        // Execute the transaction (this is a placeholder, actual implementation may vary)
-        (bool success,) = _transaction.to.call{value: _transaction.value}(_transaction.data);
-        require(success, "Transaction execution failed");
-
-        // Emit an event for the executed transaction
-        emit TransactionExecuted(_txHash, _transaction.to, _transaction.value, _transaction.data);
+       _executeTransaction(_transaction);
     }
 
     function executeTransactionFromOutside(Transaction calldata _transaction) external payable override {
