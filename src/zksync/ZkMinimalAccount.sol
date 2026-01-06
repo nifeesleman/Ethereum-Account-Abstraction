@@ -48,7 +48,26 @@ function _validateTransaction(Transaction memory _transaction) internal returns 
     } else {
         magic = bytes4(0); // Indicates invalid signature
     }
-    return magic;
+    return magic;}
+    function _executeTransaction(Transaction memory _transaction) internal {
+    address to = address(uint160(_transaction.to));
+    uint128 value = Utils.safeCastToU128(_transaction.value);
+    bytes memory data = _transaction.data;
+
+    // Handle calls to the DEPLOYER_SYSTEM_CONTRACT for contract deployments
+    if (to == address(DEPLOYER_SYSTEM_CONTRACT)) {
+        uint32 gas = Utils.safeCastToU32(gasleft());
+        SystemContractsCaller.systemCallWithPropagatedRevert(gas, to, value, data);
+    } else {
+        // Standard external call
+        bool success;
+        assembly {
+            success := call(gas(), to, value, add(data, 0x20), mload(data), 0, 0)
+        }
+        if (!success) {
+            revert ZkMinimalAccount_ExecutionFailed();
+        }
+    }
 }
     function validateTransaction(bytes32 _txHash, bytes32 _suggestedSignedHash, Transaction memory _transaction)
         external
