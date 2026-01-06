@@ -87,7 +87,14 @@ function _validateTransaction(Transaction memory _transaction) internal returns 
     }
 
     function executeTransactionFromOutside(Transaction calldata _transaction) external payable override {
-        revert("Not implemented"); // Placeholder
+       bytes4 magic = _validateTransaction(_transaction);
+    // IMPORTANT: Always check the result of validation.
+    // If the signature is not valid, or other validation checks fail,
+    // _validateTransaction will return a magic value other than ACCOUNT_VALIDATION_SUCCESS_MAGIC.
+    if (magic != ACCOUNT_VALIDATION_SUCCESS_MAGIC) {
+        revert ZkMinimalAccount_InvalidSignature(); // Or a more generic validation failed error
+    }
+    _executeTransaction(_transaction);
     }
 
     function payForTransaction(bytes32 _txHash, bytes32 _suggestedSignedHash, Transaction calldata _transaction)
