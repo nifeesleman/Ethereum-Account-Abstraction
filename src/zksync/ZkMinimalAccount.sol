@@ -72,12 +72,16 @@ contract ZkMinimalAccount is IAccount {
         payable
         override
     {
-        // Implement paymaster preparation logic here
-        // Example: validate transaction, prepare for paymaster, and emit events
-        require(_transaction.to != address(0), "Invalid recipient address");
+           // In this minimal implementation, we can ignore _txHash and _suggestedSignedHash.
+        // All necessary information for payment is contained within the _transaction struct.
 
-        // Prepare for paymaster (this is a placeholder, actual implementation may vary)
-        // Emit an event for the prepared transaction
-        emit PaymasterPrepared(_txHash, _transaction.to, _transaction.value);
+        // The core logic relies on a helper function, payToTheBootloader,
+        // which is part of the TransactionHelper library (via _transaction).
+        bool success = _transaction.payToTheBootloader();
+
+        // If the payment to the bootloader fails, revert the transaction.
+        if (!success) {
+            revert ZkMinimalAccount__FailedToPay();
+        
     }
 }
