@@ -56,13 +56,7 @@ function _validateTransaction(Transaction memory _transaction) internal returns 
         override
         returns (bytes4 magic)
     {
-        SystemContractsCaller.systemCallWithPropagatedRevert(
-            uint32(gasleft()), // gas limit for the call
-            address(NONCE_HOLDER_SYSTEM_CONTRACT), // Address of the system contract
-            0, // value to send (must be 0 for system calls)
-            abi.encodeCall(INonceHolder.incrementMinNonceIfEquals, (_transaction.nonce)) // Encoded function call data
-        );
-        revert("Not implemented"); // Placeholder
+           return _validateTransaction(_transaction);
     }
 
     function executeTransaction(bytes32 _txHash, bytes32 _suggestedSignedHash, Transaction calldata _transaction)
