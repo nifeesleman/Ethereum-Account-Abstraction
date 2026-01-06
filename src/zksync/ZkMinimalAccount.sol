@@ -13,6 +13,7 @@ import {
 } from "lib/foundry-era-contracts/src/system-contracts/contracts/SystemContractsCaller.sol";
 
 contract ZkMinimalAccount is IAccount {
+    error ZkMinimalAccount__FailedToPay();
     modifier requireFromBootloader() {
         if (msg.sender != BOOTLOADER_FORMAL_ADDRESS) {
             // Check caller
