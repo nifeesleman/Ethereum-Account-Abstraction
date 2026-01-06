@@ -21,7 +21,35 @@ contract ZkMinimalAccount is IAccount {
         }
         _; // Proceed if check passes
     }
+// INTERNAL FUNCTIONS
+function _validateTransaction(Transaction memory _transaction) internal returns (bytes4 magic) {
+    // Call nonceholder to increment nonce
+    // This system call increments the nonce if the provided _transaction.nonce matches the current one.
+    SystemContractsCaller.systemCallWithPropagatedRevert(
+        uint32(gasleft()),
+        address(NONCE_HOLDER_SYSTEM_CONTRACT),
+        0,
+        abi.encodeCall(INonceHolder.incrementMinNonceIfEquals, (_transaction.nonce))
+    );
+    // Check if the account has enough balance to cover the transaction's cost
+    uint256 totalRequiredBalance = _transaction.totalRequiredBalance();
+    if (totalRequiredBalance > address(this).balance) {
+        revert ZkMinimalAccount_NotEnoughBalance();
+    }
 
+    // Verify the transaction signature
+    bytes32 txHash = _transaction.encodeHash();
+    bytes32 convertedHash = MessageHashUtils.toEthSignedMessageHash(txHash);
+    address signer = ECDSA.recover(convertedHash, _transaction.signature);
+    bool isValidSigner = signer == owner();
+
+    if (isValidSigner) {
+        magic = ACCOUNT_VALIDATION_SUCCESS_MAGIC;
+    } else {
+        magic = bytes4(0); // Indicates invalid signature
+    }
+    return magic;
+}
     function validateTransaction(bytes32 _txHash, bytes32 _suggestedSignedHash, Transaction memory _transaction)
         external
         payable
