@@ -16,9 +16,13 @@ import {
     INonceHolder,
     NONCE_HOLDER_SYSTEM_CONTRACT
 } from "lib/foundry-era-contracts/src/system-contracts/contracts/interfaces/INonceHolder.sol";
-i
+
 contract ZkMinimalAccount is IAccount {
+    using MemoryTransactionHelper for Transaction;
+    
     error ZkMinimalAccount__FailedToPay();
+    error ZkMinimalAccount_NotEnoughBalance();
+
     modifier requireFromBootloader() {
         if (msg.sender != BOOTLOADER_FORMAL_ADDRESS) {
             // Check caller
@@ -77,7 +81,7 @@ contract ZkMinimalAccount is IAccount {
             }
         }
     }
-//--------------EXTERNAL FUNCTIONS----------------//
+    //--------------EXTERNAL FUNCTIONS----------------//
 
     function validateTransaction(bytes32 _txHash, bytes32 _suggestedSignedHash, Transaction memory _transaction)
         external
