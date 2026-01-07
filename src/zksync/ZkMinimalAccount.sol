@@ -6,12 +6,17 @@ import {IAccount} from "lib/foundry-era-contracts/src/system-contracts/contracts
 // For direct use as per IAccount, ensure the path correctly resolves to its definition.
 // The video lesson points to the struct being available via an import like this:
 import {
-    Transaction
+    Transaction,
+    MemoryTransactionHelper
 } from "lib/foundry-era-contracts/src/system-contracts/contracts/libraries/MemoryTransactionHelper.sol";
 import {
     SystemContractsCaller
 } from "lib/foundry-era-contracts/src/system-contracts/contracts/SystemContractsCaller.sol";
-
+import {
+    INonceHolder,
+    NONCE_HOLDER_SYSTEM_CONTRACT
+} from "lib/foundry-era-contracts/src/system-contracts/contracts/interfaces/INonceHolder.sol";
+i
 contract ZkMinimalAccount is IAccount {
     error ZkMinimalAccount__FailedToPay();
     modifier requireFromBootloader() {
@@ -72,6 +77,7 @@ contract ZkMinimalAccount is IAccount {
             }
         }
     }
+//--------------EXTERNAL FUNCTIONS----------------//
 
     function validateTransaction(bytes32 _txHash, bytes32 _suggestedSignedHash, Transaction memory _transaction)
         external
@@ -79,6 +85,13 @@ contract ZkMinimalAccount is IAccount {
         override
         returns (bytes4 magic)
     {
+        SystemContractsCaller.systemCallWithPropagatedRevert(
+            uint32(gasleft()),
+            address(NONCE_HOLDER_SYSTEM_CONTRACT),
+            BOOTLOADER_FORMAL_ADDRESS,
+            0,
+            abi.encodeCall(IAccount.validateTransaction, (_txHash, _suggestedSignedHash, _transaction))
+        );
         return _validateTransaction(_transaction);
     }
 
