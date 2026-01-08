@@ -118,7 +118,7 @@ contract SendPackedUserOp is
         }
 
         if (needed > 0) {
-            (bool sent, ) = payable(smartAccount).call{value: needed}("");
+            (bool sent,) = payable(smartAccount).call{value: needed}("");
             if (!sent) revert("Funding smart account failed");
             console2.log("Transferred ETH to account:", needed);
         }
