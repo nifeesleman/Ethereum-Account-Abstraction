@@ -92,6 +92,7 @@ contract ZkMinimalAccount is IAccount, Ownable {
         } else {
             // Standard external call
             bool success;
+            /// @solidity memory-safe-assembly
             assembly {
                 success := call(gas(), to, value, add(data, 0x20), mload(data), 0, 0)
             }
