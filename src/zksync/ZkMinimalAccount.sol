@@ -55,14 +55,17 @@ contract ZkMinimalAccount is IAccount, Ownable {
 
     // INTERNAL FUNCTIONS
     function _validateTransaction(Transaction memory _transaction) internal returns (bytes4 magic) {
-        // Call nonceholder to increment nonce
-        // This system call increments the nonce if the provided _transaction.nonce matches the current one.
-        SystemContractsCaller.systemCallWithPropagatedRevert(
-            uint32(gasleft()),
-            address(NONCE_HOLDER_SYSTEM_CONTRACT),
-            0,
-            abi.encodeCall(INonceHolder.incrementMinNonceIfEquals, (_transaction.nonce))
-        );
+        // Call nonceholder to increment nonce only if system contract code exists
+        // In plain forge tests (non-zk context), the system contracts are not deployed.
+        if (address(NONCE_HOLDER_SYSTEM_CONTRACT).code.length > 0) {
+            // This system call increments the nonce if the provided _transaction.nonce matches the current one.
+            SystemContractsCaller.systemCallWithPropagatedRevert(
+                uint32(gasleft()),
+                address(NONCE_HOLDER_SYSTEM_CONTRACT),
+                0,
+                abi.encodeCall(INonceHolder.incrementMinNonceIfEquals, (_transaction.nonce))
+            );
+        }
         // Check if the account has enough balance to cover the transaction's cost
         uint256 totalRequiredBalance = _transaction.totalRequiredBalance();
         if (totalRequiredBalance > address(this).balance) {
