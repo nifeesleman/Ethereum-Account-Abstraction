@@ -4,6 +4,16 @@ pragma solidity 0.8.24;
 import {Test} from "forge-std/Test.sol";
 import {ZkMinimalAccount} from "src/zksync/ZkMinimalAccount.sol";
 import {Transaction} from "foundry-era-contracts/src/system-contracts/contracts/libraries/MemoryTransactionHelper.sol";
+import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import {
+    MemoryTransactionHelper
+} from "lib/foundry-era-contracts/src/system-contracts/contracts/libraries/MemoryTransactionHelper.sol";
+import {BOOTLOADER_FORMAL_ADDRESS} from "lib/foundry-era-contracts/src/system-contracts/contracts/Constants.sol";
+import {
+    IAccount,
+    ACCOUNT_VALIDATION_SUCCESS_MAGIC
+} from "lib/foundry-era-contracts/src/system-contracts/contracts/interfaces/IAccount.sol";
+import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 
 contract MockTarget {
     uint256 public counter;
@@ -14,45 +24,76 @@ contract MockTarget {
 }
 
 contract ZkMinimalAccountTest is Test {
-    ZkMinimalAccount private zkMinimalAccount;
+    using MessageHashUtils for bytes32;
+    ZkMinimalAccount private minimalAccount;
     MockTarget private target;
+    ERC20Mock private usdc;
     address private owner;
+    bytes32 constant EMPTY_BYTES32 = bytes32(0);
+    uint256 constant AMOUNT = 1 ether; // Example amount
     uint256 constant ANVIL_DEFAULT_KEY = 0xac0974bec39a17e36ba46cd47b2cff49341e7a3373594e7397d7483645a9385;
 
     function setUp() public {
-        owner = vm.addr(0xA11CE);
-        zkMinimalAccount = new ZkMinimalAccount(owner);
+        // Align owner with the signing key used in tests
+        owner = vm.addr(ANVIL_DEFAULT_KEY);
+        minimalAccount = new ZkMinimalAccount(owner);
         target = new MockTarget();
     }
 
     function testOwnerSetOnDeploy() public {
-        assertEq(zkMinimalAccount.owner(), owner);
+        assertEq(minimalAccount.owner(), owner);
     }
 
     function testNonOwnerCannotExecuteTransaction() public {
-        Transaction memory txn = _baseTransaction();
+        Transaction memory txn = _createUnsignedTransaction();
 
         vm.expectRevert(ZkMinimalAccount.ZkMinimalAccount__NotFromBootloaderOrOwner.selector);
-        zkMinimalAccount.executeTransaction(bytes32(0), bytes32(0), txn);
+        minimalAccount.executeTransaction(bytes32(0), bytes32(0), txn);
     }
 
     function testOwnerCanExecuteTransaction() public {
         Transaction memory txn = _callTargetTransaction();
 
         vm.prank(owner);
-        zkMinimalAccount.executeTransaction(bytes32(0), bytes32(0), txn);
+        minimalAccount.executeTransaction(bytes32(0), bytes32(0), txn);
 
         assertEq(target.counter(), 1);
     }
 
+    function testZkValidateTransaction() public {
+        // Arrange
+        address dest = address(usdc);
+        uint256 value = 0;
+        bytes memory functionData = abi.encodeWithSelector(ERC20Mock.mint.selector, address(minimalAccount), AMOUNT);
+        // Create an unsigned zkSync Era transaction (type 113)
+        // The _createUnsignedTransaction helper is assumed to be similar to previous lessons,
+        // populating fields like nonce, from, to, gasLimit, gasPerPubdataByteLimit, etc.
+        // For this lesson, `minimalAccount.owner()` is ANVIL_DEFAULT_ACCOUNT due to setUp.
+        // The nonce should be the current expected nonce for the account.
+        Transaction memory transaction =
+            _createUnsignedTransaction();
+        // Sign the transaction using a new helper
+        transaction = _signTransaction(transaction);
+
+        // Act
+        // Simulate the call originating from the Bootloader
+        vm.prank(BOOTLOADER_FORMAL_ADDRESS);
+        // The first two arguments (_txHash, _suggestedSignedHash) are passed as EMPTY_BYTES32
+        // as they are not central to this basic signature validation test.
+        bytes4 magic = minimalAccount.validateTransaction(EMPTY_BYTES32, EMPTY_BYTES32, transaction);
+
+        // Assert
+        assertEq(magic, ACCOUNT_VALIDATION_SUCCESS_MAGIC, "Validation did not return success magic");
+    }
+
     function _callTargetTransaction() private view returns (Transaction memory txn) {
-        txn = _baseTransaction();
+        txn = _createUnsignedTransaction();
         txn.to = uint256(uint160(address(target)));
         txn.from = uint256(uint160(owner));
         txn.data = abi.encodeWithSelector(MockTarget.execute.selector);
     }
 
-    function _baseTransaction() private pure returns (Transaction memory txn) {
+    function _createUnsignedTransaction() private pure returns (Transaction memory txn) {
         txn.txType = 0; // Legacy tx type
         txn.from = 0;
         txn.to = 0;
