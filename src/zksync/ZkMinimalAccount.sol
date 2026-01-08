@@ -14,14 +14,22 @@ import {
 } from "lib/foundry-era-contracts/src/system-contracts/contracts/SystemContractsCaller.sol";
 import {
     INonceHolder,
-    NONCE_HOLDER_SYSTEM_CONTRACT
+    NONCE_HOLDER_SYSTEM_CONTRACT,
+    DEPLOYER_SYSTEM_CONTRACT,
 } from "lib/foundry-era-contracts/src/system-contracts/contracts/interfaces/INonceHolder.sol";
+import{Utils} from "lib/foundry-era-contracts/src/system-contracts/contracts/libraries/Utils.sol";
+
 
 contract ZkMinimalAccount is IAccount {
     using MemoryTransactionHelper for Transaction;
     
     error ZkMinimalAccount__FailedToPay();
     error ZkMinimalAccount_NotEnoughBalance();
+    error ZkMinimalAccount_ExecutionFailed();
+    error ZkMinimalAccount_InvalidSignature();
+    error ZkMinimalAccount__NotFromBootloader();
+    error ZkMinimalAccount__NotFromBootloaderOrOwner();
+
 
     modifier requireFromBootloader() {
         if (msg.sender != BOOTLOADER_FORMAL_ADDRESS) {
@@ -30,6 +38,15 @@ contract ZkMinimalAccount is IAccount {
         }
         _; // Proceed if check passes
     }
+
+    modifier requireFromBootloaderOrOOwner() {
+        if (msg.sender != BOOTLOADER_FORMAL_ADDRESS&& msg.sender != owner()) {
+            // Check caller
+            revert ZkMinimalAccount__NotFromBootloaderOrOwner(); // Custom error
+        }
+        _; // Proceed if check passes
+    }
+
 
     // INTERNAL FUNCTIONS
     function _validateTransaction(Transaction memory _transaction) internal returns (bytes4 magic) {
@@ -103,11 +120,12 @@ contract ZkMinimalAccount is IAccount {
         external
         payable
         override
+        requireFromBootloaderOrOwner
     {
         _executeTransaction(_transaction);
     }
 
-    function executeTransactionFromOutside(Transaction calldata _transaction) external payable override {
+    function executeTransactionFromOutside(Transaction calldata _transaction) external payable override  {
         bytes4 magic = _validateTransaction(_transaction);
         // IMPORTANT: Always check the result of validation.
         // If the signature is not valid, or other validation checks fail,
@@ -123,7 +141,10 @@ contract ZkMinimalAccount is IAccount {
         payable
         override
     {
-        revert("Not implemented"); // Placeholder
+        bool success = _transaction.payToTheBootloader();
+        if (!success) {
+            revert ZkMinimalAccount__FailedToPay();
+        }
     }
 
     function prepareForPaymaster(bytes32 _txHash, bytes32 _suggestedSignedHash, Transaction calldata _transaction)
