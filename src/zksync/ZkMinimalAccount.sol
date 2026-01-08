@@ -9,7 +9,10 @@ import {
     NONCE_HOLDER_SYSTEM_CONTRACT,
     DEPLOYER_SYSTEM_CONTRACT
 } from "foundry-era-contracts/src/system-contracts/contracts/Constants.sol";
-import {IAccount, ACCOUNT_VALIDATION_SUCCESS_MAGIC} from "foundry-era-contracts/src/system-contracts/contracts/interfaces/IAccount.sol";
+import {
+    IAccount,
+    ACCOUNT_VALIDATION_SUCCESS_MAGIC
+} from "foundry-era-contracts/src/system-contracts/contracts/interfaces/IAccount.sol";
 import {
     Transaction,
     MemoryTransactionHelper
