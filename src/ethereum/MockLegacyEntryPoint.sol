@@ -39,8 +39,11 @@ contract MockLegacyEntryPoint is ILegacyEntryPoint {
             signature: bytes("")
         });
         bytes memory enc = abi.encode(tmp);
-        assembly {
-            hash := keccak256(add(enc, 0x20), mload(enc))
+        assembly ("memory-safe") {
+            // Compute keccak over the encoded user operation without mutating free memory
+            let ptr := add(enc, 0x20)
+            let len := mload(enc)
+            hash := keccak256(ptr, len)
         }
     }
 
