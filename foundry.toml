@@ -3,7 +3,6 @@ src = "src"
 out = "out"
 libs = ["lib"]
 remappings = ["@openzeppelin/contracts=lib/openzeppelin-contracts/contracts"]
-is-system = true
 via_ir = true
 [rpc_endpoints]
 arbitrums = "https://arb-mainnet.g.alchemy.com/v2/sp56I1b0oNcCSuNHCSb81JHQyaa4ywv3"

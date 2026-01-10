@@ -200,4 +200,23 @@ contract ZkMinimalAccount is IAccount, Ownable {
             revert ZkMinimalAccount__FailedToPay();
         }
     }
+
+    // Convenience helper: verifies signature and sufficient balance without side effects
+    function verifyTransaction(Transaction calldata _transaction) external view returns (bool) {
+        // Verify signature
+        bytes32 txHash = _transaction.encodeHash();
+        bytes32 convertedHash = MessageHashUtils.toEthSignedMessageHash(txHash);
+        address signer = ECDSA.recover(convertedHash, _transaction.signature);
+        if (signer != owner()) {
+            return false;
+        }
+
+        // Check balance sufficiency for required fees/value
+        uint256 totalRequiredBalance = _transaction.totalRequiredBalance();
+        if (totalRequiredBalance > address(this).balance) {
+            return false;
+        }
+
+        return true;
+    }
 }
