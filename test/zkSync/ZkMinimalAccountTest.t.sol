@@ -9,10 +9,7 @@ import {
     MemoryTransactionHelper
 } from "lib/foundry-era-contracts/src/system-contracts/contracts/libraries/MemoryTransactionHelper.sol";
 import {BOOTLOADER_FORMAL_ADDRESS} from "lib/foundry-era-contracts/src/system-contracts/contracts/Constants.sol";
-import {
-    IAccount,
-    ACCOUNT_VALIDATION_SUCCESS_MAGIC
-} from "lib/foundry-era-contracts/src/system-contracts/contracts/interfaces/IAccount.sol";
+import {ACCOUNT_VALIDATION_SUCCESS_MAGIC} from "lib/foundry-era-contracts/src/system-contracts/contracts/interfaces/IAccount.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 
 contract MockTarget {
@@ -25,22 +22,22 @@ contract MockTarget {
 
 contract ZkMinimalAccountTest is Test {
     using MessageHashUtils for bytes32;
-    ZkMinimalAccount private minimalAccount;
     MockTarget private target;
     ERC20Mock private usdc;
+    ZkMinimalAccount private minimalAccount;
     address private owner;
     bytes32 constant EMPTY_BYTES32 = bytes32(0);
     uint256 constant AMOUNT = 1 ether; // Example amount
     uint256 constant ANVIL_DEFAULT_KEY = 0xac0974bec39a17e36ba46cd47b2cff49341e7a3373594e7397d7483645a9385;
 
     function setUp() public {
-        // Align owner with the signing key used in tests
+        // Align owner with the signing key used in test
         owner = vm.addr(ANVIL_DEFAULT_KEY);
         minimalAccount = new ZkMinimalAccount(owner);
         target = new MockTarget();
     }
 
-    function testOwnerSetOnDeploy() public {
+    function testOwnerSetOnDeploy() public view {
         assertEq(minimalAccount.owner(), owner);
     }
 
@@ -62,9 +59,6 @@ contract ZkMinimalAccountTest is Test {
 
     function testZkValidateTransaction() public {
         // Arrange
-        address dest = address(usdc);
-        uint256 value = 0;
-        bytes memory functionData = abi.encodeWithSelector(ERC20Mock.mint.selector, address(minimalAccount), AMOUNT);
         // Create an unsigned zkSync Era transaction (type 113)
         // The _createUnsignedTransaction helper is assumed to be similar to previous lessons,
         // populating fields like nonce, from, to, gasLimit, gasPerPubdataByteLimit, etc.
