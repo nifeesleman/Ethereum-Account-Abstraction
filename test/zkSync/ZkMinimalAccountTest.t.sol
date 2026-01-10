@@ -9,7 +9,9 @@ import {
     MemoryTransactionHelper
 } from "lib/foundry-era-contracts/src/system-contracts/contracts/libraries/MemoryTransactionHelper.sol";
 import {BOOTLOADER_FORMAL_ADDRESS} from "lib/foundry-era-contracts/src/system-contracts/contracts/Constants.sol";
-import {ACCOUNT_VALIDATION_SUCCESS_MAGIC} from "lib/foundry-era-contracts/src/system-contracts/contracts/interfaces/IAccount.sol";
+import {
+    ACCOUNT_VALIDATION_SUCCESS_MAGIC
+} from "lib/foundry-era-contracts/src/system-contracts/contracts/interfaces/IAccount.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 
 contract MockTarget {
@@ -64,8 +66,7 @@ contract ZkMinimalAccountTest is Test {
         // populating fields like nonce, from, to, gasLimit, gasPerPubdataByteLimit, etc.
         // For this lesson, `minimalAccount.owner()` is ANVIL_DEFAULT_ACCOUNT due to setUp.
         // The nonce should be the current expected nonce for the account.
-        Transaction memory transaction =
-            _createUnsignedTransaction();
+        Transaction memory transaction = _createUnsignedTransaction();
         // Sign the transaction using a new helper
         transaction = _signTransaction(transaction);
 

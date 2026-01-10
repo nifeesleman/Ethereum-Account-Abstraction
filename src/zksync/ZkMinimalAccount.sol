@@ -117,7 +117,13 @@ contract ZkMinimalAccount is IAccount, Ownable {
     }
     //--------------EXTERNAL FUNCTIONS----------------//
 
-    function validateTransaction(bytes32 /*_txHash*/, bytes32 /*_suggestedSignedHash*/, Transaction memory _transaction)
+    function validateTransaction(
+        bytes32,
+        /*_txHash*/
+        bytes32,
+        /*_suggestedSignedHash*/
+        Transaction memory _transaction
+    )
         external
         payable
         override
@@ -126,7 +132,13 @@ contract ZkMinimalAccount is IAccount, Ownable {
         magic = _validateTransaction(_transaction);
     }
 
-    function executeTransaction(bytes32 /*_txHash*/, bytes32 /*_suggestedSignedHash*/, Transaction calldata _transaction)
+    function executeTransaction(
+        bytes32,
+        /*_txHash*/
+        bytes32,
+        /*_suggestedSignedHash*/
+        Transaction calldata _transaction
+    )
         external
         payable
         override
@@ -146,7 +158,13 @@ contract ZkMinimalAccount is IAccount, Ownable {
         _executeTransaction(_transaction);
     }
 
-    function payForTransaction(bytes32 /*_txHash*/, bytes32 /*_suggestedSignedHash*/, Transaction calldata _transaction)
+    function payForTransaction(
+        bytes32,
+        /*_txHash*/
+        bytes32,
+        /*_suggestedSignedHash*/
+        Transaction calldata _transaction
+    )
         external
         payable
         override
@@ -157,7 +175,13 @@ contract ZkMinimalAccount is IAccount, Ownable {
         }
     }
 
-    function prepareForPaymaster(bytes32 /*_txHash*/, bytes32 /*_suggestedSignedHash*/, Transaction calldata _transaction)
+    function prepareForPaymaster(
+        bytes32,
+        /*_txHash*/
+        bytes32,
+        /*_suggestedSignedHash*/
+        Transaction calldata _transaction
+    )
         external
         payable
         override
