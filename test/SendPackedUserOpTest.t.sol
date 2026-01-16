@@ -99,10 +99,18 @@ contract SendPackedUserOpTest is Test {
         }
         (address dest, uint256 value, bytes memory inner) = abi.decode(args, (address, uint256, bytes));
 
-        assertEq(bytes4(data), MinimalAccount.execute.selector);
+        bytes4 outerSel;
+        assembly {
+            outerSel := mload(add(data, 32))
+        }
+        assertEq(outerSel, MinimalAccount.execute.selector);
         assertEq(dest, 0xaf88d065e77c8cC2239327C5EDb3A432268e5831);
         assertEq(value, 0);
-        assertEq(bytes4(inner), bytes4(0x095ea7b3));
+        bytes4 innerSel;
+        assembly {
+            innerSel := mload(add(inner, 32))
+        }
+        assertEq(innerSel, bytes4(0x095ea7b3));
     }
 
     function testEnsurePrefundNoActionWhenDepositSufficient() public {
