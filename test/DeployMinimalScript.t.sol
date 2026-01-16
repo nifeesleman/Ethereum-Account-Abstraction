@@ -30,13 +30,13 @@ contract DeployMinimalScriptTest is Test {
 
     function testDeployPrefersEnvPrivateKeyForNonLocal() public {
         uint256 originalChainId = block.chainid;
-        uint256 envPk = 0xbabe;
-        vm.setEnv("PRIVATE_KEY", vm.toString(envPk));
+        vm.setEnv("PRIVATE_KEY", "0x1234");
         vm.chainId(ETH_SEPOLIA_CHAIN_ID);
 
         (HelperConfig helperConfig, MinimalAccount minimalAccount) = deployer.deployMinimalAccount();
 
         HelperConfig.NetworkConfig memory cfg = helperConfig.getConfigByChainId(ETH_SEPOLIA_CHAIN_ID);
+        uint256 envPk = vm.envUint("PRIVATE_KEY");
         assertEq(minimalAccount.owner(), vm.addr(envPk));
         assertEq(minimalAccount.getEntryPoint(), cfg.entryPoint);
 
